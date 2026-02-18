@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sendyourpicks-frontend
+  namespace: sendyourpicks
+  labels:
+    app: sendyourpicks-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sendyourpicks-frontend
+  template:
+    metadata:
+      labels:
+        app: sendyourpicks-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: jwschman/sendyourpicks-frontend:latest
+          ports:
+            - containerPort: 3000
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          envFrom:
+            - secretRef:
+                name: sendyourpicks-frontend-secret
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sendyourpicks-frontend
+  namespace: sendyourpicks
+spec:
+  selector:
+    app: sendyourpicks-frontend
+  ports:
+    - port: 3000
+      targetPort: 3000
